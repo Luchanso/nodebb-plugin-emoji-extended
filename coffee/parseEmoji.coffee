@@ -3,7 +3,7 @@
     mappingEnabled = settings.get 'mapping.enabled'
     content.replace replaceRegex, (match) ->
       emoji.parse (if mappingEnabled then execMapping(match) else match), emojiPath,
-        classes: 'emoji emoji-extended'
+        classes: 'emoji emoji-extended not-responsive'
         attributes:
           title: (match, name, parameter) -> if parameter? then parameter else name
           alt: (match, name, parameter) -> if parameter? then parameter else match
