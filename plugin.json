@@ -39,7 +39,7 @@
       "priority": 15
     },
     {
-      "hook": "filter:email.send",
+      "hook": "filter:email.modify",
       "method": "email"
     },
     {
