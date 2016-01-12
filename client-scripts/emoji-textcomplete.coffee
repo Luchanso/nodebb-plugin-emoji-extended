@@ -262,14 +262,16 @@
       object.textcomplete [emojiTextCompleteData], options
       cb?()
 
-  $(window).on 'composer:autocomplete:init', (ignored, data) ->
+  addStrategy = (ignored, data) ->
     if !data.element.data dataProperty
       if exports.strategy?
         data.strategies.push exports.strategy
         data.element.data dataProperty, '1'
       else
         exports.addCompletion data.element, data.options
-  $(window).on 'action:chat.loaded', (ignored, modal) -> exports.addCompletion $ "#chat-message-input", modal
+
+  $(window).on 'composer:autocomplete:init', addStrategy
+  $(window).on 'chat:autocomplete:init', addStrategy
   $(window).trigger 'emoji-extended:initialized', exports
 
   exports.ready.then ->
