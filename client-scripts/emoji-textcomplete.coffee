@@ -123,17 +123,21 @@
 
   defaultUsage = true
 
+  dataProperty = 'emoji-extended-added'
+
   exports = window.emojiExtended =
-    addCompletion: (object, cb) ->
+    addCompletion: (object, options, cb) ->
       this.ready.then (addTextComplete) ->
-        addTextComplete object, cb
-      , cb
+        addTextComplete object, options, cb
+      , if typeof options == "function" then options else cb
       null
     updated: false
     path: "#{RELATIVE_PATH}/plugins/nodebb-plugin-emoji-extended/images/"
     getPath: (name) -> if name? then "#{this.path}#{encodeURIComponent name.toLowerCase()}.png" else this.path
     list: []
+    strategy: null
     ready: $.Deferred()
+
   $(document).ready -> socket.emit 'modules.emojiExtended', null, (err, data) ->
     if err?
       console.error "Error while initializing emoji-extended."
@@ -231,7 +235,7 @@
       lines = term.match(/^.*$/gm)
       return !(isInlineCodeContext(lines[lines.length - 1]) || isBlockCodeContext lines)
 
-    emojiTextCompleteData =
+    exports.strategy = emojiTextCompleteData =
 #        anything before not ending with $completePrefix   : any words/numbers/+/-, count from minChars to any
       match: new RegExp "^((([\\s\\S]*)(#{completePrefix})):[\\w\\d+-]{#{minChars},})$", "i"
       search: (term, callback) ->
@@ -246,17 +250,25 @@
       maxCount: maxCount
       index: 1
 
-    exports.ready.resolve.call exports, (object, cb) ->
+    exports.ready.resolve.call exports, (object, options = TEXTCOMPLETE_OPTIONS, cb) ->
+      if typeof options == "function"
+        cb = options
+        options = TEXTCOMPLETE_OPTIONS
       object = $ object if !(object instanceof $)
-      if object.data 'emoji-extended-added'
+      if object.data dataProperty
         cb new Error 'Already added' if typeof cb == 'function'
         return
-      object.data 'emoji-extended-added', '1'
-      object.textcomplete [emojiTextCompleteData], TEXTCOMPLETE_OPTIONS
+      object.data dataProperty, '1'
+      object.textcomplete [emojiTextCompleteData], options
       cb?()
 
-  $(window).on 'action:composer.loaded', (ignored, data) ->
-    exports.addCompletion $ "#cmp-uuid-#{data.post_uuid} textarea.write"
+  $(window).on 'composer:autocomplete:init', (ignored, data) ->
+    if !data.element.data dataProperty
+      if exports.strategy?
+        data.strategies.push exports.strategy
+        data.element.data dataProperty, '1'
+      else
+        exports.addCompletion data.element, data.options
   $(window).on 'action:chat.loaded', (ignored, modal) -> exports.addCompletion $ "#chat-message-input", modal
   $(window).trigger 'emoji-extended:initialized', exports
 
