@@ -132,7 +132,7 @@
       , if typeof options == "function" then options else cb
       null
     updated: false
-    path: "#{RELATIVE_PATH}/plugins/nodebb-plugin-emoji-extended/images/"
+    path: "/plugins/nodebb-plugin-emoji-extended/images/"
     getPath: (name) -> if name? then "#{this.path}#{encodeURIComponent name.toLowerCase()}.png" else this.path
     list: []
     strategy: null
